@@ -8,13 +8,9 @@ import (
 )
 
 type ServiceRegistry struct {
-	Port  string
+	Port string
+	// TODO: Maybe don't use in memory storage?
 	Infos map[string]*ServiceInfo
-}
-
-type CustomContext struct {
-	echo.Context
-	Sr *ServiceRegistry
 }
 
 func (sr *ServiceRegistry) AddServiceInfo(si *ServiceInfo) error {
@@ -38,6 +34,7 @@ func New() *ServiceRegistry {
 func (sr *ServiceRegistry) Run() {
 	e := echo.New()
 
+	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			cc := &CustomContext{c, sr}
@@ -45,6 +42,7 @@ func (sr *ServiceRegistry) Run() {
 		}
 	})
 
+	// Routes
 	e.GET("/serviceInfo", getAll)
 	e.GET("/serviceInfo/:name", getByName)
 	e.POST("/serviceInfo", register)
