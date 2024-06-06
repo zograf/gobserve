@@ -120,14 +120,17 @@ func (proxy *Proxy) AddServiceInfo(si *core.ServiceInfo) error {
 	}
 
 	err := proxy.addToRegistry(proxiedInfo)
+	fmt.Println(proxiedInfo)
 	return err
 }
 
 func New() *Proxy {
 	p := os.Getenv("PROXY_PORT")
+	ip := os.Getenv("PROXY_IP")
 	srIp := os.Getenv("SERVICE_REGISTRY_IP")
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
 	sr := &Proxy{
+		Ip:     ip,
 		Port:   p,
 		SRIP:   srIp,
 		SRPort: srPort,
@@ -153,6 +156,7 @@ func (proxy *Proxy) Run() {
 	// Routes
 	e.GET("/serviceInfo", getAll)
 	e.GET("/serviceInfo/:name", getByName)
+	e.POST("/serviceInfo", register)
 	e.Any("/*", proxyPass)
 
 	e.Logger.Fatal(e.Start(proxy.Port))
