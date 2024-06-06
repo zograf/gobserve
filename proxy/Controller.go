@@ -1,4 +1,4 @@
-package serviceregistry
+package proxy
 
 import (
 	"net/http"
@@ -12,7 +12,9 @@ func getAll(c echo.Context) error {
 
 	infos, err := cc.Sr.GetInfos()
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 	}
 
 	return c.JSON(http.StatusOK, infos)
@@ -35,6 +37,10 @@ func getByName(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, value)
+}
+
+func proxyPass(c echo.Context) error {
+	return c.JSON(http.StatusOK, "")
 }
 
 func register(c echo.Context) error {
