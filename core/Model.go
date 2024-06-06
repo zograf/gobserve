@@ -14,6 +14,6 @@ type CustomContext struct {
 }
 
 type Registry interface {
-	GetInfos() map[string]*ServiceInfo
+	GetInfos() (map[string]*ServiceInfo, error)
 	AddServiceInfo(si *ServiceInfo) error
 }

@@ -9,14 +9,25 @@ import (
 
 func getAll(c echo.Context) error {
 	cc := c.(*core.CustomContext)
-	return c.JSON(http.StatusOK, cc.Sr.GetInfos())
+
+	infos, err := cc.Sr.GetInfos()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, infos)
 }
 
 func getByName(c echo.Context) error {
 	name := c.Param("name")
 	cc := c.(*core.CustomContext)
 
-	value, exists := cc.Sr.GetInfos()[name]
+	infos, err := cc.Sr.GetInfos()
+	if err != nil {
+		return err
+	}
+
+	value, exists := infos[name]
 	if !exists {
 		return c.JSON(http.StatusNotFound, map[string]string{
 			"error": "Service info with that name was not found",

@@ -14,18 +14,23 @@ type ServiceRegistry struct {
 	Infos map[string]*core.ServiceInfo
 }
 
-func (sr *ServiceRegistry) GetInfos() map[string]*core.ServiceInfo {
-	return sr.Infos
+func (sr *ServiceRegistry) GetInfos() (map[string]*core.ServiceInfo, error) {
+	return sr.Infos, nil
 }
 
 func (sr *ServiceRegistry) AddServiceInfo(si *core.ServiceInfo) error {
-	_, exists := sr.GetInfos()[si.Name]
+	infos, err := sr.GetInfos()
+	if err != nil {
+		return err
+	}
+
+	_, exists := infos[si.Name]
 
 	if exists {
 		return fmt.Errorf("ServiceInfo with name %s already exists", si.Name)
 	}
 
-	sr.GetInfos()[si.Name] = si
+	infos[si.Name] = si
 	return nil
 }
 
