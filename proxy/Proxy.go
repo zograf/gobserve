@@ -61,10 +61,17 @@ func (proxy *Proxy) getRealInfos() (map[string]*core.ServiceInfo, error) {
 }
 
 func (proxy *Proxy) GetInfos() (map[string]*core.ServiceInfo, error) {
+	if proxy.ProxiedService == nil {
+		return nil, fmt.Errorf("microservice not yet registered")
+	}
 	realInfos, err := proxy.getRealInfos()
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service infos.\nerror message: %s", err.Error())
+	}
+
+	if _, exists := realInfos[proxy.ProxiedService.Name]; exists {
+		delete(realInfos, proxy.ProxiedService.Name)
 	}
 
 	for _, val := range realInfos {
