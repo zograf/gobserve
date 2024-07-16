@@ -1,7 +1,7 @@
 services:
   p:
     build:
-      context: .
+      context: ../
       dockerfile: ./proxy/Dockerfile
     environment:
       PROXY_IP: localhost

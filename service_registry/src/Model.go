@@ -1,4 +1,4 @@
-package core
+package serviceregistry
 
 import "github.com/labstack/echo/v4"
 

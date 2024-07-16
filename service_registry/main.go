@@ -1,7 +1,7 @@
 package main
 
 import (
-	serviceregistry "github.com/zograf/gobserve/service_registry/pkg"
+	serviceregistry "github.com/zograf/gobserve/service_registry/src"
 )
 
 func main() {

@@ -11,19 +11,18 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/zograf/gobserve/core"
 )
 
 type Proxy struct {
 	Port           string
 	Ip             string
-	Infos          map[string]*core.ServiceInfo
-	ProxiedService *core.ServiceInfo
+	Infos          map[string]*ServiceInfo
+	ProxiedService *ServiceInfo
 	SRIP           string
 	SRPort         string
 }
 
-func (proxy *Proxy) getRealInfos() (map[string]*core.ServiceInfo, error) {
+func (proxy *Proxy) getRealInfos() (map[string]*ServiceInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 
@@ -50,7 +49,7 @@ func (proxy *Proxy) getRealInfos() (map[string]*core.ServiceInfo, error) {
 		return nil, err
 	}
 
-	var ret map[string]*core.ServiceInfo
+	var ret map[string]*ServiceInfo
 	err = json.Unmarshal(body, &ret)
 
 	if err != nil {
@@ -60,7 +59,7 @@ func (proxy *Proxy) getRealInfos() (map[string]*core.ServiceInfo, error) {
 	return ret, nil
 }
 
-func (proxy *Proxy) GetInfos() (map[string]*core.ServiceInfo, error) {
+func (proxy *Proxy) GetInfos() (map[string]*ServiceInfo, error) {
 	if proxy.ProxiedService == nil {
 		return nil, fmt.Errorf("microservice not yet registered")
 	}
@@ -83,7 +82,7 @@ func (proxy *Proxy) GetInfos() (map[string]*core.ServiceInfo, error) {
 	return realInfos, nil
 }
 
-func (proxy *Proxy) addToRegistry(si *core.ServiceInfo) error {
+func (proxy *Proxy) addToRegistry(si *ServiceInfo) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 
@@ -113,14 +112,14 @@ func (proxy *Proxy) addToRegistry(si *core.ServiceInfo) error {
 	return nil
 }
 
-func (proxy *Proxy) AddServiceInfo(si *core.ServiceInfo) error {
+func (proxy *Proxy) AddServiceInfo(si *ServiceInfo) error {
 	if proxy.ProxiedService != nil {
 		return fmt.Errorf("ServiceInfo with name %s already exists", si.Name)
 	}
 
 	proxy.ProxiedService = si
 
-	proxiedInfo := &core.ServiceInfo{
+	proxiedInfo := &ServiceInfo{
 		Name: si.Name,
 		Port: proxy.Port,
 		Ip:   proxy.Ip,
@@ -142,7 +141,7 @@ func New() *Proxy {
 		SRIP:   srIp,
 		SRPort: srPort,
 	}
-	sr.Infos = make(map[string]*core.ServiceInfo)
+	sr.Infos = make(map[string]*ServiceInfo)
 	return sr
 }
 
@@ -152,7 +151,7 @@ func (proxy *Proxy) Run() {
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			cc := &core.CustomContext{
+			cc := &CustomContext{
 				Context: c,
 				Sr:      proxy,
 			}

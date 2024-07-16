@@ -1,7 +1,7 @@
 package main
 
 import (
-	proxy "github.com/zograf/gobserve/proxy/pkg"
+	proxy "github.com/zograf/gobserve/proxy/src"
 )
 
 func main() {

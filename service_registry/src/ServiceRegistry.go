@@ -5,20 +5,19 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
-	"github.com/zograf/gobserve/core"
 )
 
 type ServiceRegistry struct {
 	Port string
 	// TODO: Maybe don't use in memory storage?
-	Infos map[string]*core.ServiceInfo
+	Infos map[string]*ServiceInfo
 }
 
-func (sr *ServiceRegistry) GetInfos() (map[string]*core.ServiceInfo, error) {
+func (sr *ServiceRegistry) GetInfos() (map[string]*ServiceInfo, error) {
 	return sr.Infos, nil
 }
 
-func (sr *ServiceRegistry) AddServiceInfo(si *core.ServiceInfo) error {
+func (sr *ServiceRegistry) AddServiceInfo(si *ServiceInfo) error {
 	infos, err := sr.GetInfos()
 	if err != nil {
 		return err
@@ -37,7 +36,7 @@ func (sr *ServiceRegistry) AddServiceInfo(si *core.ServiceInfo) error {
 func New() *ServiceRegistry {
 	p := os.Getenv("SERVICE_REGISTRY_PORT")
 	sr := &ServiceRegistry{Port: p}
-	sr.Infos = make(map[string]*core.ServiceInfo)
+	sr.Infos = make(map[string]*ServiceInfo)
 	return sr
 }
 
@@ -47,7 +46,7 @@ func (sr *ServiceRegistry) Run() {
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			cc := &core.CustomContext{
+			cc := &CustomContext{
 				Context: c,
 				Sr:      sr,
 			}
