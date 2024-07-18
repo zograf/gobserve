@@ -12,12 +12,11 @@ type Service struct {
 }
 
 type ComposeFile struct {
-	Version  string             `yaml:"version"`
 	Services map[string]Service `yaml:"services"`
 }
 
 const COMPOSE_FILE_NAME string = "docker-compose.yml"
 const CONTEXT string = "../"
-const SERVICE_REGISTRY_DOCKERFILE string = "./service-registry/Dockerfile"
+const SERVICE_REGISTRY_DOCKERFILE string = "./service_registry/Dockerfile"
 const SERVICE_REGISTRY_PORT int = 7777
 const IP string = "localhost"

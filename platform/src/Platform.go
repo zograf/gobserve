@@ -2,14 +2,17 @@ package platform
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
 
 	"gopkg.in/yaml.v3"
 )
 
 func Init() {
 	cf := &ComposeFile{
-		Version:  "3",
 		Services: make(map[string]Service),
 	}
 
@@ -33,7 +36,38 @@ func Init() {
 }
 
 func Run() {
+	cmd := exec.Command("docker-compose", "up")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		log.Fatalf("failed to docker compose: %v", err)
+	}
 
+	go func() {
+		err := cmd.Wait()
+		if err != nil {
+			log.Fatalf("docker compose failed: %v", err)
+		}
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	<-sigChan
+
+	err = cmd.Process.Signal(syscall.SIGSTOP)
+	if err != nil {
+		log.Fatalf("failed to SIGSTOP: %v", err)
+	}
+
+	downCmd := exec.Command("docker-compose", "down")
+	downCmd.Stdout = os.Stdout
+	downCmd.Stderr = os.Stderr
+	err = downCmd.Run()
+	if err != nil {
+		log.Fatalf("failed to stop docker compose: %v", err)
+	}
 }
 
 func Add() {

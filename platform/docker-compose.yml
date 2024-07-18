@@ -1,9 +1,8 @@
-version: "3"
 services:
     service_registry:
         build:
             context: ../
-            dockerfile: sr-dockerfile
+            dockerfile: ./service_registry/Dockerfile
         environment:
             SERVICE_REGISTRY_IP: localhost
             SERVICE_REGISTRY_PORT: :7777

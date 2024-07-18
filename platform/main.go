@@ -27,7 +27,6 @@ func main() {
 		os.Exit(1)
 	}
 	if *isCompose {
-		// Run the compose
-		os.Exit(1)
+		platform.Run()
 	}
 }
