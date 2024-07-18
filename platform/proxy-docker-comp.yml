@@ -1,0 +1,12 @@
+services:
+  p:
+    build:
+      context: ../
+      dockerfile: ./proxy/Dockerfile
+    environment:
+      PROXY_IP: localhost
+      PROXY_PORT: :1234
+      SERVICE_REGISTRY_PORT: :7777
+      SERVICE_REGISTRY_IP: serviceregistry
+    ports:
+      - "1234:1234"

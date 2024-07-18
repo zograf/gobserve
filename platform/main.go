@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"os"
+
+	platform "github.com/zograf/gobserve/platform/src"
 )
 
 func main() {
@@ -18,8 +20,7 @@ func main() {
 	}
 
 	if *isInit {
-		// Initialize an "empty" docker compose
-		os.Exit(1)
+		platform.Init()
 	}
 	if *dockerFile != "" {
 		// Add the docker file path to the compose
