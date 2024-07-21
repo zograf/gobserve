@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 
 	platform "github.com/zograf/gobserve/platform/src"
@@ -10,21 +11,26 @@ import (
 func main() {
 	isInit := flag.Bool("init", false, "Initializes a docker compose for deployment. This will delete all existing docker files.")
 	isCompose := flag.Bool("run", false, "Composes the docker files provided.")
-	dockerFile := flag.String("add", "", "Provide a path to the docker file. The docker file is then prepared for deployment.")
+	microservicePath := flag.String("add", "", "Provide a path to the docker file. The docker file is then prepared for deployment.")
 
 	flag.Parse()
 
-	if !*isInit && !*isCompose && *dockerFile == "" {
+	if !*isInit && !*isCompose && *microservicePath == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
 
 	if *isInit {
-		platform.Init()
+		err := platform.Init()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	if *dockerFile != "" {
-		// Add the docker file path to the compose
-		os.Exit(1)
+	if *microservicePath != "" {
+		err := platform.Add(*microservicePath)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	if *isCompose {
 		platform.Run()

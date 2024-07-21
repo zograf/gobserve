@@ -1,7 +1,9 @@
 package platform
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -11,7 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Init() {
+func Init() error {
 	cf := &ComposeFile{
 		Services: make(map[string]Service),
 	}
@@ -32,7 +34,21 @@ func Init() {
 
 	cf.Services["service_registry"] = serviceregistry
 
-	SaveCompose(cf)
+	err := clean()
+	if err != nil {
+		return err
+	}
+
+	err = saveCompose(cf)
+	if err != nil {
+		return err
+	}
+
+	err = writeConfig(&PlatformConfig{
+		ServiceCounter: 1,
+	})
+
+	return err
 }
 
 func Run() {
@@ -70,8 +86,76 @@ func Run() {
 	}
 }
 
-func Add() {
+func Add(path string) error {
+	if err := isDir(path); err != nil {
+		return fmt.Errorf("failed to open the directory: %v", err)
+	}
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory")
+	}
+
+	config, err := readConfig()
+	if err != nil {
+		return fmt.Errorf("failed to read the config file: %v", err)
+	}
+
+	newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, config.ServiceCounter)
+	cmd := exec.Command("cp", "--recursive", path, newPath)
+	cmd.Run()
+
+	config.ServiceCounter++
+	err = writeConfig(config)
+	return err
+}
+
+func writeConfig(config *PlatformConfig) error {
+	jsonString, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	bytes := []byte(jsonString)
+
+	err = os.WriteFile(CONFIG_PATH, bytes, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func readConfig() (*PlatformConfig, error) {
+	file, err := os.Open(CONFIG_PATH)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open the config file: %v", err)
+	}
+	defer file.Close()
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read the file: %v", err)
+	}
+
+	var config PlatformConfig
+	err = json.Unmarshal(bytes, &config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal: %v", err)
+	}
+
+	return &config, nil
+}
+
+func isDir(path string) error {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("couldn't find the file")
+	}
+	if !fileInfo.IsDir() {
+		return fmt.Errorf("not a directory")
+	}
+	return nil
 }
 
 func ReadCompose() (*ComposeFile, error) {
@@ -89,7 +173,7 @@ func ReadCompose() (*ComposeFile, error) {
 	return &cf, nil
 }
 
-func SaveCompose(cf *ComposeFile) error {
+func saveCompose(cf *ComposeFile) error {
 	data, err := yaml.Marshal(cf)
 	if err != nil {
 		return fmt.Errorf("failed to marshal the compose file")
@@ -98,6 +182,30 @@ func SaveCompose(cf *ComposeFile) error {
 	err = os.WriteFile(COMPOSE_FILE_NAME, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to save the compose file")
+	}
+
+	return nil
+}
+
+func clean() error {
+	config, err := readConfig()
+	if err != nil {
+		return err
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	i := config.ServiceCounter - 1
+	for i > 0 {
+		fileName := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, i)
+		cmd := exec.Command("rm", "-r", fileName)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
+		i--
 	}
 
 	return nil
