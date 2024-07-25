@@ -1,0 +1,54 @@
+package microservice
+
+import (
+	"fmt"
+
+	"github.com/labstack/echo"
+)
+
+func New() *Microservice {
+	//ip := os.Getenv("IP")
+	//p := os.Getenv("PORT")
+	//srIp := os.Getenv("SERVICE_REGISTRY_IP")
+	//srPort := os.Getenv("SERVICE_REGISTRY_PORT")
+	ip := "127.0.0.1"
+	p := ":1111"
+	srIp := "127.0.0.1"
+	srPort := ":7777"
+
+	ms := &Microservice{
+		Ip:                  ip,
+		Port:                p,
+		ServiceRegistryIp:   srIp,
+		ServiceRegistryPort: srPort,
+		Info: ServiceInfo{
+			Ip:   ip,
+			Port: p,
+			Name: "A",
+		},
+	}
+	return ms
+}
+
+func (ms *Microservice) Run() {
+	e := echo.New()
+
+	// Middleware
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			cc := &CustomContext{
+				Context: c,
+				Ms:      *ms,
+			}
+			return next(cc)
+		}
+	})
+
+	// Routes
+	e.GET("/", getTest)
+	e.GET("/findServiceInfo", getServiceInfo)
+	e.POST("/register", register)
+
+	url := fmt.Sprintf("%s%s", ms.Ip, ms.Port)
+	e.Logger.Fatal(e.Start(url))
+}
