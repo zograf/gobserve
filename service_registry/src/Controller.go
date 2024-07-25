@@ -4,11 +4,10 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/zograf/gobserve/core"
 )
 
 func getAll(c echo.Context) error {
-	cc := c.(*core.CustomContext)
+	cc := c.(*CustomContext)
 
 	infos, err := cc.Sr.GetInfos()
 	if err != nil {
@@ -20,7 +19,7 @@ func getAll(c echo.Context) error {
 
 func getByName(c echo.Context) error {
 	name := c.Param("name")
-	cc := c.(*core.CustomContext)
+	cc := c.(*CustomContext)
 
 	infos, err := cc.Sr.GetInfos()
 	if err != nil {
@@ -38,14 +37,14 @@ func getByName(c echo.Context) error {
 }
 
 func register(c echo.Context) error {
-	si := &core.ServiceInfo{}
+	si := &ServiceInfo{}
 
 	if err := c.Bind(si); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "Invalid request body",
 		})
 	}
-	cc := c.(*core.CustomContext)
+	cc := c.(*CustomContext)
 	if err := cc.Sr.AddServiceInfo(si); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
