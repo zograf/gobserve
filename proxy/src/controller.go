@@ -59,3 +59,7 @@ func register(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, si)
 }
+
+func healthCheck(c echo.Context) error {
+	return c.NoContent(http.StatusOK)
+}

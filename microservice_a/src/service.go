@@ -45,9 +45,10 @@ func (ms *Microservice) Run() {
 	})
 
 	// Routes
-	e.GET("/", getTest)
+	e.GET("/health", healthCheck)
 	e.GET("/findServiceInfo", getServiceInfo)
 	e.POST("/register", register)
+	e.GET("/", getTest)
 
 	url := fmt.Sprintf("%s%s", ms.Ip, ms.Port)
 	e.Logger.Fatal(e.Start(url))

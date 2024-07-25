@@ -105,3 +105,7 @@ func register(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, "Register successful")
 }
+
+func healthCheck(c echo.Context) error {
+	return c.NoContent(http.StatusOK)
+}

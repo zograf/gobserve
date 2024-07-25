@@ -160,6 +160,7 @@ func (proxy *Proxy) Run() {
 	})
 
 	// Routes
+	e.GET("/health", healthCheck)
 	e.GET("/serviceInfo", getAll)
 	e.GET("/serviceInfo/:name", getByName)
 	e.POST("/serviceInfo", register)
