@@ -1,22 +1,20 @@
 package platform
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
-
-	"gopkg.in/yaml.v3"
 )
 
 func Init() error {
 	cf := &ComposeFile{
 		Services: make(map[string]Service),
 	}
+
+	portStr := fmt.Sprintf(":%d", SERVICE_REGISTRY_PORT)
 
 	serviceregistry := Service{
 		Build: BuildConf{
@@ -30,6 +28,7 @@ func Init() error {
 		Ports: []string{
 			fmt.Sprintf("%d:%d", SERVICE_REGISTRY_PORT, SERVICE_REGISTRY_PORT),
 		},
+		HealthCheck: makeHealthCheck(portStr),
 	}
 
 	cf.Services["service_registry"] = serviceregistry
@@ -87,6 +86,8 @@ func Run() {
 }
 
 func Add(path string) error {
+
+	// Copy proxy
 	if err := isDir(path); err != nil {
 		return fmt.Errorf("failed to open the directory: %v", err)
 	}
@@ -102,111 +103,60 @@ func Add(path string) error {
 	}
 
 	newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, config.ServiceCounter)
+	proxyFolder := fmt.Sprintf("p%d", config.ServiceCounter)
 	cmd := exec.Command("cp", "--recursive", path, newPath)
 	cmd.Run()
+
+	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, proxyFolder, os.PathSeparator)
+
+	sp := makeService(9001, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
+
+	cf, err := ReadCompose()
+	if err != nil {
+		return err
+	}
+
+	cf.Services[proxyFolder] = sp
+	err = saveCompose(cf)
+	if err != nil {
+		return err
+	}
+
+	// Copy microservice
+	if err := isDir(path); err != nil {
+		return fmt.Errorf("failed to open the directory: %v", err)
+	}
+
+	wd, err = os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory")
+	}
+
+	config, err = readConfig()
+	if err != nil {
+		return fmt.Errorf("failed to read the config file: %v", err)
+	}
+
+	newPath = fmt.Sprintf("%s%cms%d", wd, os.PathSeparator, config.ServiceCounter)
+	serviceFolder := fmt.Sprintf("ms%d", config.ServiceCounter)
+	cmd = exec.Command("cp", "--recursive", path, newPath)
+	cmd.Run()
+
+	dockerfilePath = fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, serviceFolder, os.PathSeparator)
+
+	s := makeService(1001, proxyFolder, dockerfilePath, proxyFolder, 9001)
+
+	cf, err = ReadCompose()
+	if err != nil {
+		return err
+	}
+	cf.Services[serviceFolder] = s
+	err = saveCompose(cf)
+	if err != nil {
+		return err
+	}
 
 	config.ServiceCounter++
 	err = writeConfig(config)
 	return err
-}
-
-func writeConfig(config *PlatformConfig) error {
-	jsonString, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	bytes := []byte(jsonString)
-
-	err = os.WriteFile(CONFIG_PATH, bytes, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func readConfig() (*PlatformConfig, error) {
-	file, err := os.Open(CONFIG_PATH)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open the config file: %v", err)
-	}
-	defer file.Close()
-
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read the file: %v", err)
-	}
-
-	var config PlatformConfig
-	err = json.Unmarshal(bytes, &config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal: %v", err)
-	}
-
-	return &config, nil
-}
-
-func isDir(path string) error {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("couldn't find the file")
-	}
-	if !fileInfo.IsDir() {
-		return fmt.Errorf("not a directory")
-	}
-	return nil
-}
-
-func ReadCompose() (*ComposeFile, error) {
-	data, err := os.ReadFile(COMPOSE_FILE_NAME)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open the compose file")
-	}
-
-	var cf ComposeFile
-	err = yaml.Unmarshal(data, &cf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal data")
-	}
-
-	return &cf, nil
-}
-
-func saveCompose(cf *ComposeFile) error {
-	data, err := yaml.Marshal(cf)
-	if err != nil {
-		return fmt.Errorf("failed to marshal the compose file")
-	}
-
-	err = os.WriteFile(COMPOSE_FILE_NAME, data, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to save the compose file")
-	}
-
-	return nil
-}
-
-func clean() error {
-	config, err := readConfig()
-	if err != nil {
-		return err
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	i := config.ServiceCounter - 1
-	for i > 0 {
-		fileName := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, i)
-		cmd := exec.Command("rm", "-r", fileName)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Run()
-		i--
-	}
-
-	return nil
 }

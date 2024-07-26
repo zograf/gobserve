@@ -6,9 +6,11 @@ type BuildConf struct {
 }
 
 type Service struct {
-	Build       BuildConf         `yaml:"build,omitempty"`
-	Environment map[string]string `yaml:"environment,omitempty"`
-	Ports       []string          `yaml:"ports,omitempty"`
+	Build       BuildConf                     `yaml:"build,omitempty"`
+	Environment map[string]string             `yaml:"environment,omitempty"`
+	HealthCheck HealthCheck                   `yaml:"healthcheck,omitempty"`
+	DependsOn   map[string]DependsOnCondition `yaml:"depends_on,omitempty"`
+	Ports       []string                      `yaml:"ports,omitempty"`
 }
 
 type ComposeFile struct {
@@ -19,9 +21,22 @@ type PlatformConfig struct {
 	ServiceCounter int `json:"service_counter"`
 }
 
+type HealthCheck struct {
+	Test     []string `yaml:"test,flow"`
+	Interval string   `yaml:"interval"`
+	Timeout  string   `yaml:"timeout"`
+	Retries  int      `yaml:"retries"`
+}
+
+type DependsOnCondition struct {
+	Condition string `yaml:"condition"`
+}
+
+// TODO: Get these in a config?
 const COMPOSE_FILE_NAME string = "docker-compose.yml"
 const CONTEXT string = "../"
 const SERVICE_REGISTRY_DOCKERFILE string = "./service_registry/Dockerfile"
 const SERVICE_REGISTRY_PORT int = 7777
-const IP string = "localhost"
+const IP string = "127.0.0.1"
 const CONFIG_PATH string = "./config.json"
+const PROXY_PATH string = "../proxy"
