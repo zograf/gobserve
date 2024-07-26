@@ -131,8 +131,8 @@ func (proxy *Proxy) AddServiceInfo(si *ServiceInfo) error {
 }
 
 func New() *Proxy {
-	p := os.Getenv("PROXY_PORT")
-	ip := os.Getenv("PROXY_IP")
+	p := os.Getenv("PORT")
+	ip := os.Getenv("IP")
 	srIp := os.Getenv("SERVICE_REGISTRY_IP")
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
 	sr := &Proxy{
