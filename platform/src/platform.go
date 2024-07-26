@@ -88,7 +88,7 @@ func Run() {
 func Add(path string) error {
 
 	// Copy proxy
-	if err := isDir(path); err != nil {
+	if err := isDir(PROXY_PATH); err != nil {
 		return fmt.Errorf("failed to open the directory: %v", err)
 	}
 
@@ -104,12 +104,12 @@ func Add(path string) error {
 
 	newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, config.ServiceCounter)
 	proxyFolder := fmt.Sprintf("p%d", config.ServiceCounter)
-	cmd := exec.Command("cp", "--recursive", path, newPath)
+	cmd := exec.Command("cp", "--recursive", PROXY_PATH, newPath)
 	cmd.Run()
 
 	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, proxyFolder, os.PathSeparator)
 
-	sp := makeService(9001, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
+	sp := makeService(proxyFolder, 9001, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
 
 	cf, err := ReadCompose()
 	if err != nil {
@@ -144,7 +144,7 @@ func Add(path string) error {
 
 	dockerfilePath = fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, serviceFolder, os.PathSeparator)
 
-	s := makeService(1001, proxyFolder, dockerfilePath, proxyFolder, 9001)
+	s := makeService(serviceFolder, 1001, proxyFolder, dockerfilePath, proxyFolder, 9001)
 
 	cf, err = ReadCompose()
 	if err != nil {

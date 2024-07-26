@@ -1,8 +1,9 @@
 package platform
 
 type BuildConf struct {
-	Context    string `yaml:"context,omitempty"`
-	Dockerfile string `yaml:"dockerfile,omitempty"`
+	Context    string   `yaml:"context,omitempty"`
+	Dockerfile string   `yaml:"dockerfile,omitempty"`
+	Args       []string `yaml:"args,omitempty"`
 }
 
 type Service struct {

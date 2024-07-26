@@ -9,6 +9,7 @@ import (
 
 type ServiceRegistry struct {
 	Port string
+	Ip   string
 	// TODO: Maybe don't use in memory storage?
 	Infos map[string]*ServiceInfo
 }
@@ -35,7 +36,11 @@ func (sr *ServiceRegistry) AddServiceInfo(si *ServiceInfo) error {
 
 func New() *ServiceRegistry {
 	p := os.Getenv("SERVICE_REGISTRY_PORT")
-	sr := &ServiceRegistry{Port: p}
+	ip := os.Getenv("SERVICE_REGISTRY_IP")
+	sr := &ServiceRegistry{
+		Port: p,
+		Ip:   ip,
+	}
 	sr.Infos = make(map[string]*ServiceInfo)
 	return sr
 }
@@ -60,5 +65,6 @@ func (sr *ServiceRegistry) Run() {
 	e.GET("/serviceInfo/:name", getByName)
 	e.POST("/serviceInfo", register)
 
-	e.Logger.Fatal(e.Start(sr.Port))
+	url := fmt.Sprintf("%s%s", sr.Ip, sr.Port)
+	e.Logger.Fatal(e.Start(url))
 }

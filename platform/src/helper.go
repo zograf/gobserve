@@ -120,20 +120,23 @@ func makeHealthCheck(port string) HealthCheck {
 	url := fmt.Sprintf("http://localhost%s/health", port)
 	hc := HealthCheck{
 		Test:     []string{"CMD", "curl", "-f", url},
-		Timeout:  "5s",
-		Retries:  5,
-		Interval: "5s",
+		Timeout:  "3s",
+		Retries:  3,
+		Interval: "3s",
 	}
 	return hc
 }
 
-func makeService(port int, dependsOn, dockerfilePath, srIp string, srPort int) Service {
+func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp string, srPort int) Service {
 	// TODO: Figure out a logic behind proxy port
 	portStr := fmt.Sprintf(":%d", port)
 	s := Service{
 		Build: BuildConf{
 			Context:    "./",
 			Dockerfile: dockerfilePath,
+			Args: []string{
+				fmt.Sprintf("PROJECT_DIR=%s", serviceName),
+			},
 		},
 		Environment: map[string]string{
 			"PORT":                  portStr,

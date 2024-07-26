@@ -61,5 +61,5 @@ func register(c echo.Context) error {
 }
 
 func healthCheck(c echo.Context) error {
-	return c.NoContent(http.StatusOK)
+	return c.JSON(http.StatusOK, map[string]string{"status": "healthy"})
 }

@@ -166,5 +166,6 @@ func (proxy *Proxy) Run() {
 	e.POST("/serviceInfo", register)
 	e.Any("/*", proxyPass)
 
-	e.Logger.Fatal(e.Start(proxy.Port))
+	url := fmt.Sprintf("%s%s", proxy.Ip, proxy.Port)
+	e.Logger.Fatal(e.Start(url))
 }

@@ -2,7 +2,8 @@ FROM golang:1.22
 
 WORKDIR /app
 
-COPY ./microservice_a ./
+ARG PROJECT_DIR
+COPY ./$PROJECT_DIR ./
 
 RUN go mod download
 
