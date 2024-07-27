@@ -35,8 +35,8 @@ func (sr *ServiceRegistry) AddServiceInfo(si *ServiceInfo) error {
 }
 
 func New() *ServiceRegistry {
-	p := os.Getenv("SERVICE_REGISTRY_PORT")
-	ip := os.Getenv("SERVICE_REGISTRY_IP")
+	p := os.Getenv("PORT")
+	ip := os.Getenv("IP")
 	sr := &ServiceRegistry{
 		Port: p,
 		Ip:   ip,

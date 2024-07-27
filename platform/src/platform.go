@@ -22,8 +22,8 @@ func Init() error {
 			Dockerfile: SERVICE_REGISTRY_DOCKERFILE,
 		},
 		Environment: map[string]string{
-			"SERVICE_REGISTRY_PORT": fmt.Sprintf(":%d", SERVICE_REGISTRY_PORT),
-			"SERVICE_REGISTRY_IP":   IP,
+			"PORT": fmt.Sprintf(":%d", SERVICE_REGISTRY_PORT),
+			"IP":   IP,
 		},
 		Ports: []string{
 			fmt.Sprintf("%d:%d", SERVICE_REGISTRY_PORT, SERVICE_REGISTRY_PORT),
