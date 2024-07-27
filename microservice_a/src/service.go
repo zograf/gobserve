@@ -2,19 +2,16 @@ package microservice
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/labstack/echo"
 )
 
 func New() *Microservice {
-	//ip := os.Getenv("IP")
-	//p := os.Getenv("PORT")
-	//srIp := os.Getenv("SERVICE_REGISTRY_IP")
-	//srPort := os.Getenv("SERVICE_REGISTRY_PORT")
-	ip := "127.0.0.1"
-	p := ":1111"
-	srIp := "127.0.0.1"
-	srPort := ":7777"
+	ip := os.Getenv("IP")
+	p := os.Getenv("PORT")
+	srIp := os.Getenv("SERVICE_REGISTRY_IP")
+	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
 
 	ms := &Microservice{
 		Ip:                  ip,
