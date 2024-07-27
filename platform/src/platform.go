@@ -86,72 +86,17 @@ func Run() {
 }
 
 func Add(path string) error {
-
-	// Copy proxy
-	if err := isDir(PROXY_PATH); err != nil {
-		return fmt.Errorf("failed to open the directory: %v", err)
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory")
-	}
-
 	config, err := readConfig()
 	if err != nil {
 		return fmt.Errorf("failed to read the config file: %v", err)
 	}
 
-	newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, config.ServiceCounter)
-	proxyFolder := fmt.Sprintf("p%d", config.ServiceCounter)
-	cmd := exec.Command("cp", "--recursive", PROXY_PATH, newPath)
-	cmd.Run()
-
-	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, proxyFolder, os.PathSeparator)
-
-	sp := makeService(proxyFolder, 9001, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
-
-	cf, err := ReadCompose()
+	proxyName, err := makeProxy(PROXY_PATH, config.ServiceCounter, 9001)
 	if err != nil {
 		return err
 	}
 
-	cf.Services[proxyFolder] = sp
-	err = saveCompose(cf)
-	if err != nil {
-		return err
-	}
-
-	// Copy microservice
-	if err := isDir(path); err != nil {
-		return fmt.Errorf("failed to open the directory: %v", err)
-	}
-
-	wd, err = os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory")
-	}
-
-	config, err = readConfig()
-	if err != nil {
-		return fmt.Errorf("failed to read the config file: %v", err)
-	}
-
-	newPath = fmt.Sprintf("%s%cms%d", wd, os.PathSeparator, config.ServiceCounter)
-	serviceFolder := fmt.Sprintf("ms%d", config.ServiceCounter)
-	cmd = exec.Command("cp", "--recursive", path, newPath)
-	cmd.Run()
-
-	dockerfilePath = fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, serviceFolder, os.PathSeparator)
-
-	s := makeService(serviceFolder, 1001, proxyFolder, dockerfilePath, proxyFolder, 9001)
-
-	cf, err = ReadCompose()
-	if err != nil {
-		return err
-	}
-	cf.Services[serviceFolder] = s
-	err = saveCompose(cf)
+	err = makeMicroservice(path, proxyName, config.ServiceCounter, 1001)
 	if err != nil {
 		return err
 	}

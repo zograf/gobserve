@@ -154,3 +154,60 @@ func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp s
 	}
 	return s
 }
+
+func makeProxy(path string, counter, port int) (string, error) {
+	if err := isDir(path); err != nil {
+		return "", fmt.Errorf("failed to open the directory: %v", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get working directory")
+	}
+
+	newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, counter)
+	proxyFolder := fmt.Sprintf("p%d", counter)
+	cmd := exec.Command("cp", "--recursive", PROXY_PATH, newPath)
+	cmd.Run()
+
+	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, proxyFolder, os.PathSeparator)
+
+	sp := makeService(proxyFolder, port, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
+
+	err = saveService(proxyFolder, sp)
+	return proxyFolder, err
+}
+
+func makeMicroservice(path, proxyName string, counter, port int) error {
+	if err := isDir(path); err != nil {
+		return fmt.Errorf("failed to open the directory: %v", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory")
+	}
+
+	newPath := fmt.Sprintf("%s%cms%d", wd, os.PathSeparator, counter)
+	serviceFolder := fmt.Sprintf("ms%d", counter)
+	cmd := exec.Command("cp", "--recursive", path, newPath)
+	cmd.Run()
+
+	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, serviceFolder, os.PathSeparator)
+
+	s := makeService(serviceFolder, port, proxyName, dockerfilePath, proxyName, 9001)
+
+	err = saveService(serviceFolder, s)
+	return err
+}
+
+func saveService(name string, service Service) error {
+	cf, err := ReadCompose()
+	if err != nil {
+		return err
+	}
+
+	cf.Services[name] = service
+	err = saveCompose(cf)
+	return err
+}
