@@ -19,7 +19,9 @@ type ComposeFile struct {
 }
 
 type PlatformConfig struct {
-	ServiceCounter int `json:"service_counter"`
+	ServiceCounter  int `json:"service_counter"`
+	NextProxyPort   int `json:"next_proxy_port"`
+	NextServicePort int `json:"next_service_port"`
 }
 
 type HealthCheck struct {

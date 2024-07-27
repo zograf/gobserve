@@ -44,7 +44,9 @@ func Init() error {
 	}
 
 	err = writeConfig(&PlatformConfig{
-		ServiceCounter: 1,
+		ServiceCounter:  1,
+		NextProxyPort:   10001,
+		NextServicePort: 40001,
 	})
 
 	return err
@@ -91,17 +93,19 @@ func Add(path string) error {
 		return fmt.Errorf("failed to read the config file: %v", err)
 	}
 
-	proxyName, err := makeProxy(PROXY_PATH, config.ServiceCounter, 9001)
+	proxyName, err := makeProxy(PROXY_PATH, config.ServiceCounter, config.NextProxyPort)
 	if err != nil {
 		return err
 	}
 
-	err = makeMicroservice(path, proxyName, config.ServiceCounter, 1001)
+	err = makeMicroservice(path, proxyName, config.ServiceCounter, config.NextServicePort)
 	if err != nil {
 		return err
 	}
 
 	config.ServiceCounter++
+	config.NextProxyPort++
+	config.NextServicePort++
 	err = writeConfig(config)
 	return err
 }
