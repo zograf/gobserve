@@ -131,8 +131,8 @@ func (proxy *Proxy) AddServiceInfo(si *ServiceInfo) error {
 }
 
 func New() *Proxy {
-	p := os.Getenv("PROXY_PORT")
-	ip := os.Getenv("PROXY_IP")
+	p := os.Getenv("PORT")
+	ip := os.Getenv("IP")
 	srIp := os.Getenv("SERVICE_REGISTRY_IP")
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
 	sr := &Proxy{
@@ -160,10 +160,12 @@ func (proxy *Proxy) Run() {
 	})
 
 	// Routes
+	e.GET("/health", healthCheck)
 	e.GET("/serviceInfo", getAll)
 	e.GET("/serviceInfo/:name", getByName)
 	e.POST("/serviceInfo", register)
 	e.Any("/*", proxyPass)
 
-	e.Logger.Fatal(e.Start(proxy.Port))
+	url := fmt.Sprintf("%s%s", proxy.Ip, proxy.Port)
+	e.Logger.Fatal(e.Start(url))
 }

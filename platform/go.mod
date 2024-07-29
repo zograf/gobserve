@@ -2,4 +2,4 @@ module github.com/zograf/gobserve/platform
 
 go 1.22.3
 
-require gopkg.in/yaml.v3 v3.0.1 // indirect
+require gopkg.in/yaml.v2 v2.4.0
