@@ -86,7 +86,7 @@ func Add(path string) error {
 		return err
 	}
 
-	err = makeMicroservice(path, proxyName, config.ServiceCounter, config.NextServicePort)
+	err = makeMicroservice(path, proxyName, config.ServiceCounter, config.NextServicePort, config.NextProxyPort)
 	if err != nil {
 		return err
 	}

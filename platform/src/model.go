@@ -12,6 +12,7 @@ type Service struct {
 	HealthCheck HealthCheck                   `yaml:"healthcheck,omitempty"`
 	DependsOn   map[string]DependsOnCondition `yaml:"depends_on,omitempty"`
 	Ports       []string                      `yaml:"ports,omitempty"`
+	NetworkMode string                        `yaml:"network_mode,omitempty"`
 }
 
 type ComposeFile struct {

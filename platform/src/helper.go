@@ -149,13 +149,14 @@ func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp s
 			Dockerfile: dockerfilePath,
 			Args: []string{
 				fmt.Sprintf("PROJECT_DIR=%s", serviceName),
+				fmt.Sprintf("EXPOSE_PORT=%d", port),
 			},
 		},
 		Environment: map[string]string{
 			"PORT":                  portStr,
 			"IP":                    IP,
 			"SERVICE_REGISTRY_PORT": fmt.Sprintf(":%d", srPort),
-			"SERVICE_REGISTRY_IP":   srIp,
+			"SERVICE_REGISTRY_IP":   "localhost",
 		},
 		Ports: []string{
 			fmt.Sprintf("%d:%d", port, port),
@@ -164,6 +165,7 @@ func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp s
 		DependsOn: map[string]DependsOnCondition{
 			dependsOn: {Condition: "service_healthy"},
 		},
+		NetworkMode: "host",
 	}
 	return s
 }
@@ -191,7 +193,7 @@ func makeProxy(path string, counter, port int) (string, error) {
 	return proxyFolder, err
 }
 
-func makeMicroservice(path, proxyName string, counter, port int) error {
+func makeMicroservice(path, proxyName string, counter, port, proxyIp int) error {
 	if err := isDir(path); err != nil {
 		return fmt.Errorf("failed to open the directory: %v", err)
 	}
@@ -208,7 +210,7 @@ func makeMicroservice(path, proxyName string, counter, port int) error {
 
 	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, serviceFolder, os.PathSeparator)
 
-	s := makeService(serviceFolder, port, proxyName, dockerfilePath, proxyName, 9001)
+	s := makeService(serviceFolder, port, proxyName, dockerfilePath, proxyName, proxyIp)
 
 	err = saveService(serviceFolder, s)
 	return err
@@ -235,6 +237,9 @@ func makeServiceRegistry() (*Service, error) {
 		Build: BuildConf{
 			Context:    CONTEXT,
 			Dockerfile: dockerfilePath,
+			Args: []string{
+				fmt.Sprintf("EXPOSE_PORT=%d", SERVICE_REGISTRY_PORT),
+			},
 		},
 		Environment: map[string]string{
 			"PORT": portStr,
@@ -244,6 +249,7 @@ func makeServiceRegistry() (*Service, error) {
 			fmt.Sprintf("%d:%d", SERVICE_REGISTRY_PORT, SERVICE_REGISTRY_PORT),
 		},
 		HealthCheck: makeHealthCheck(portStr),
+		NetworkMode: "host",
 	}
 	return &s, nil
 }
