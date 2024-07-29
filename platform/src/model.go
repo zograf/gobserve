@@ -37,9 +37,9 @@ type DependsOnCondition struct {
 
 // TODO: Get these in a config?
 const COMPOSE_FILE_NAME string = "docker-compose.yml"
-const CONTEXT string = "../"
-const SERVICE_REGISTRY_DOCKERFILE string = "./service_registry/Dockerfile"
+const CONTEXT string = "./"
 const SERVICE_REGISTRY_PORT int = 7777
 const IP string = "127.0.0.1"
 const CONFIG_PATH string = "./config.json"
 const PROXY_PATH string = "../proxy"
+const SERVICE_REGISTRY_PATH string = "../service_registry"

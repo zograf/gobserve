@@ -95,25 +95,39 @@ func clean() error {
 
 	wd, err := os.Getwd()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get working directory")
 	}
 
+	fileName := fmt.Sprintf("%s%cservice_registry", wd, os.PathSeparator)
+	removeDir(fileName)
+	fileName = fmt.Sprintf("%s%cdocker-compose.yml", wd, os.PathSeparator)
+	removeFile(fileName)
+
 	i := config.ServiceCounter - 1
+
 	for i > 0 {
 		fileName := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, i)
-		cmd := exec.Command("rm", "-r", fileName)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Run()
+		removeDir(fileName)
 		fileName = fmt.Sprintf("%s%cms%d", wd, os.PathSeparator, i)
-		cmd = exec.Command("rm", "-r", fileName)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Run()
+		removeDir(fileName)
 		i--
 	}
 
 	return nil
+}
+
+func removeDir(fileName string) {
+	cmd := exec.Command("rm", "-r", fileName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
+
+func removeFile(fileName string) {
+	cmd := exec.Command("rm", fileName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 }
 
 func makeHealthCheck(port string) HealthCheck {
@@ -128,7 +142,6 @@ func makeHealthCheck(port string) HealthCheck {
 }
 
 func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp string, srPort int) Service {
-	// TODO: Figure out a logic behind proxy port
 	portStr := fmt.Sprintf(":%d", port)
 	s := Service{
 		Build: BuildConf{
@@ -210,4 +223,46 @@ func saveService(name string, service Service) error {
 	cf.Services[name] = service
 	err = saveCompose(cf)
 	return err
+}
+
+func makeServiceRegistry() (*Service, error) {
+	dockerfilePath, err := copyServiceRegistry()
+	if err != nil {
+		return nil, err
+	}
+	portStr := fmt.Sprintf(":%d", SERVICE_REGISTRY_PORT)
+	s := Service{
+		Build: BuildConf{
+			Context:    CONTEXT,
+			Dockerfile: dockerfilePath,
+		},
+		Environment: map[string]string{
+			"PORT": portStr,
+			"IP":   IP,
+		},
+		Ports: []string{
+			fmt.Sprintf("%d:%d", SERVICE_REGISTRY_PORT, SERVICE_REGISTRY_PORT),
+		},
+		HealthCheck: makeHealthCheck(portStr),
+	}
+	return &s, nil
+}
+
+func copyServiceRegistry() (string, error) {
+	if err := isDir(SERVICE_REGISTRY_PATH); err != nil {
+		return "", fmt.Errorf("failed to open the directory: %v", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get working directory")
+	}
+
+	newPath := fmt.Sprintf("%s%cservice_registry", wd, os.PathSeparator)
+	cmd := exec.Command("cp", "--recursive", SERVICE_REGISTRY_PATH, newPath)
+	cmd.Run()
+
+	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, "service_registry", os.PathSeparator)
+
+	return dockerfilePath, err
 }
