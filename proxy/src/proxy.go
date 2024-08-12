@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -149,6 +150,8 @@ func (proxy *Proxy) Run() {
 	e := echo.New()
 
 	// Middleware
+	e.Use(logRequest)
+
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			cc := &CustomContext{
@@ -168,4 +171,109 @@ func (proxy *Proxy) Run() {
 
 	url := fmt.Sprintf("%s%s", proxy.Ip, proxy.Port)
 	e.Logger.Fatal(e.Start(url))
+}
+
+func formatLogEntry(clientIP, method, url, protocol string, requestHeaders map[string]string, requestBody string, responseTimestamp string, statusCode int, responseHeaders map[string]string, responseBody string, duration int64) string {
+	return fmt.Sprintf(
+		"request_timestamp=%s|client_ip=%s|method=%s|url=%s|protocol=%s|request_headers=%s|request_body=%s|response_timestamp=%s|status_code=%d|response_headers=%s|response_body=%s|duration_ms=%d",
+		time.Now().UTC().Format(time.RFC3339),
+		clientIP,
+		method,
+		url,
+		protocol,
+
+		formatHeaders(requestHeaders),
+		requestBody,
+
+		responseTimestamp,
+		statusCode,
+		formatHeaders(responseHeaders),
+		strings.ReplaceAll(responseBody, "\n", " "),
+		duration,
+	)
+}
+
+func formatHeaders(headers map[string]string) string {
+	var headerParts []string
+	for key, value := range headers {
+		headerParts = append(headerParts, fmt.Sprintf("%s:%s", key, value))
+	}
+	return strings.Join(headerParts, ",")
+}
+
+type CustomResponseWriter struct {
+	echo.Response
+	Body *bytes.Buffer
+}
+
+func (w *CustomResponseWriter) Write(b []byte) (int, error) {
+	w.Body.Write(b)
+	return w.Response.Writer.Write(b)
+}
+
+func logRequest(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		start := time.Now()
+
+		clientIP := c.RealIP()
+
+		var requestBody bytes.Buffer
+		_, err := io.Copy(&requestBody, c.Request().Body)
+		if err != nil {
+			return fmt.Errorf("error reading request body: %w", err)
+		}
+		c.Request().Body = io.NopCloser(&requestBody)
+
+		requestHeaders := make(map[string]string)
+		for name, values := range c.Request().Header {
+			requestHeaders[name] = values[0]
+		}
+
+		res := c.Response()
+		rec := &CustomResponseWriter{
+			Response: *res,
+			Body:     new(bytes.Buffer),
+		}
+		c.Response().Writer = rec
+
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+
+		responseBody := rec.Body.String()
+
+		responseHeaders := make(map[string]string)
+		for name, values := range c.Response().Header() {
+			responseHeaders[name] = values[0]
+		}
+
+		duration := time.Since(start).Milliseconds()
+
+		logEntry := formatLogEntry(
+			clientIP,
+			c.Request().Method,
+			c.Request().URL.String(),
+			c.Request().Proto,
+			requestHeaders,
+			requestBody.String(),
+			time.Now().UTC().Format(time.RFC3339),
+			c.Response().Status,
+			responseHeaders,
+			responseBody,
+			duration,
+		)
+
+		file, err := os.OpenFile("proxy.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return fmt.Errorf("error opening log file: %w", err)
+		}
+		defer file.Close()
+
+		_, err = file.WriteString(logEntry + "\n")
+		if err != nil {
+			return fmt.Errorf("error writing to log file: %w", err)
+		}
+
+		return nil
+	}
 }

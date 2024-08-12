@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -39,7 +40,8 @@ func getByName(c echo.Context) error {
 }
 
 func proxyPass(c echo.Context) error {
-	return c.JSON(http.StatusOK, "")
+	fmt.Println()
+	return nil
 }
 
 func register(c echo.Context) error {
