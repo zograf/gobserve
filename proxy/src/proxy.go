@@ -131,6 +131,10 @@ func (proxy *Proxy) AddServiceInfo(si *ServiceInfo) error {
 	return err
 }
 
+func (proxy *Proxy) GetProxiedService() *ServiceInfo {
+	return proxy.ProxiedService
+}
+
 func New() *Proxy {
 	p := os.Getenv("PORT")
 	ip := os.Getenv("IP")
