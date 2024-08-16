@@ -173,26 +173,6 @@ func (proxy *Proxy) Run() {
 	e.Logger.Fatal(e.Start(url))
 }
 
-func formatLogEntry(clientIP, method, url, protocol string, requestHeaders map[string]string, requestBody string, responseTimestamp string, statusCode int, responseHeaders map[string]string, responseBody string, duration int64) string {
-	return fmt.Sprintf(
-		"request_timestamp=%s|client_ip=%s|method=%s|url=%s|protocol=%s|request_headers=%s|request_body=%s|response_timestamp=%s|status_code=%d|response_headers=%s|response_body=%s|duration_ms=%d",
-		time.Now().UTC().Format(time.RFC3339),
-		clientIP,
-		method,
-		url,
-		protocol,
-
-		formatHeaders(requestHeaders),
-		requestBody,
-
-		responseTimestamp,
-		statusCode,
-		formatHeaders(responseHeaders),
-		strings.ReplaceAll(responseBody, "\n", " "),
-		duration,
-	)
-}
-
 func formatHeaders(headers map[string]string) string {
 	var headerParts []string
 	for key, value := range headers {
@@ -263,17 +243,41 @@ func logRequest(next echo.HandlerFunc) echo.HandlerFunc {
 			duration,
 		)
 
-		file, err := os.OpenFile("proxy.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return fmt.Errorf("error opening log file: %w", err)
-		}
-		defer file.Close()
-
-		_, err = file.WriteString(logEntry + "\n")
-		if err != nil {
-			return fmt.Errorf("error writing to log file: %w", err)
-		}
-
-		return nil
+		err = writeToLog(logEntry)
+		return err
 	}
+}
+
+func formatLogEntry(clientIP, method, url, protocol string, requestHeaders map[string]string, requestBody string, responseTimestamp string, statusCode int, responseHeaders map[string]string, responseBody string, duration int64) string {
+	return fmt.Sprintf(
+		"request_timestamp=%s|client_ip=%s|method=%s|url=%s|protocol=%s|request_headers=%s|request_body=%s|response_timestamp=%s|status_code=%d|response_headers=%s|response_body=%s|duration_ms=%d",
+		time.Now().UTC().Format(time.RFC3339),
+		clientIP,
+		method,
+		url,
+		protocol,
+
+		formatHeaders(requestHeaders),
+		requestBody,
+
+		responseTimestamp,
+		statusCode,
+		formatHeaders(responseHeaders),
+		strings.ReplaceAll(responseBody, "\n", " "),
+		duration,
+	)
+}
+
+func writeToLog(logEntry string) error {
+	file, err := os.OpenFile(LOG_FILE, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening log file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(logEntry + "\n")
+	if err != nil {
+		return fmt.Errorf("error writing to log file: %w", err)
+	}
+	return nil
 }

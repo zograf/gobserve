@@ -17,3 +17,5 @@ type Registry interface {
 	GetInfos() (map[string]*ServiceInfo, error)
 	AddServiceInfo(si *ServiceInfo) error
 }
+
+const LOG_FILE string = "proxy.log"
