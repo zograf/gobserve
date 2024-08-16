@@ -233,6 +233,10 @@ func logRequest(next echo.HandlerFunc) echo.HandlerFunc {
 
 		duration := time.Since(start).Milliseconds()
 
+		if c.Request().URL.String() == "/health" {
+			return nil
+		}
+
 		logEntry := formatLogEntry(
 			clientIP,
 			c.Request().Method,
