@@ -257,6 +257,10 @@ func logRequest(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func formatLogEntry(clientIP, method, url, protocol string, requestHeaders map[string]string, requestBody string, responseTimestamp string, statusCode int, responseHeaders map[string]string, responseBody string, duration int64) string {
+	resBody := strings.ReplaceAll(responseBody, "\n", "")
+	if strings.HasSuffix(resBody, "null") {
+		resBody = resBody[:len(resBody)-4]
+	}
 	return fmt.Sprintf(
 		"request_timestamp=%s|client_ip=%s|method=%s|url=%s|protocol=%s|request_headers=%s|request_body=%s|response_timestamp=%s|status_code=%d|response_headers=%s|response_body=%s|duration_ms=%d",
 		time.Now().UTC().Format(time.RFC3339),
@@ -271,7 +275,7 @@ func formatLogEntry(clientIP, method, url, protocol string, requestHeaders map[s
 		responseTimestamp,
 		statusCode,
 		formatHeaders(responseHeaders),
-		strings.ReplaceAll(responseBody, "\n", " "),
+		resBody,
 		duration,
 	)
 }

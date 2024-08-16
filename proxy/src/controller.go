@@ -130,6 +130,7 @@ func forwardRequest(c echo.Context, url string) error {
 		}
 	}
 	c.Response().WriteHeader(resp.StatusCode)
+
 	_, err = io.Copy(c.Response().Writer, resp.Body)
 	if err != nil {
 		return fmt.Errorf("Failed to copy response")
