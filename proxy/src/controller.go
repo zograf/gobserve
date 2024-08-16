@@ -56,8 +56,18 @@ func proxyPass(c echo.Context) error {
 	path := c.Request().URL.Path
 	splitPath := strings.SplitN(path[1:], "/", 2)
 
-	name := splitPath[0]
-	endpoint := splitPath[1]
+	var name, endpoint string
+	if len(splitPath) == 0 {
+		return c.JSON(http.StatusNotFound, map[string]string{
+			"error": "Bad path formatting",
+		})
+	} else if len(splitPath) == 1 {
+		name = splitPath[0]
+		endpoint = ""
+	} else {
+		name = splitPath[0]
+		endpoint = splitPath[1]
+	}
 
 	if name == service.Name {
 		url := fmt.Sprintf("http://%s%s/%s", service.Ip, service.Port, endpoint)
