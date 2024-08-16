@@ -157,6 +157,7 @@ func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp s
 			"IP":                    IP,
 			"SERVICE_REGISTRY_PORT": fmt.Sprintf(":%d", srPort),
 			"SERVICE_REGISTRY_IP":   "localhost",
+			"NAME":                  serviceName,
 		},
 		Ports: []string{
 			fmt.Sprintf("%d:%d", port, port),

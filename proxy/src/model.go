@@ -16,4 +16,7 @@ type CustomContext struct {
 type Registry interface {
 	GetInfos() (map[string]*ServiceInfo, error)
 	AddServiceInfo(si *ServiceInfo) error
+	GetProxiedService() *ServiceInfo
 }
+
+const LOG_FILE string = "proxy.log"

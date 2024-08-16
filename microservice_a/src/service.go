@@ -12,6 +12,7 @@ func New() *Microservice {
 	p := os.Getenv("PORT")
 	srIp := os.Getenv("SERVICE_REGISTRY_IP")
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
+	name := os.Getenv("NAME")
 
 	ms := &Microservice{
 		Ip:                  ip,
@@ -21,7 +22,7 @@ func New() *Microservice {
 		Info: ServiceInfo{
 			Ip:   ip,
 			Port: p,
-			Name: "A",
+			Name: name,
 		},
 	}
 	return ms
