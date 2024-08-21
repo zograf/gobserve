@@ -172,7 +172,7 @@ func (proxy *Proxy) Run() {
 	e.GET("/log", getLogData)
 	e.GET("/health", healthCheck)
 	e.GET("/serviceInfo", getAll)
-	e.GET("/serviceInfo/:name", getByName)
+	//e.GET("/serviceInfo/:name", getByName)
 	e.POST("/serviceInfo", register)
 	e.Any("/*", proxyPass)
 

@@ -24,24 +24,24 @@ func getAll(c echo.Context) error {
 	return c.JSON(http.StatusOK, infos)
 }
 
-func getByName(c echo.Context) error {
-	name := c.Param("name")
-	cc := c.(*CustomContext)
-
-	infos, err := cc.Sr.GetInfos()
-	if err != nil {
-		return err
-	}
-
-	value, exists := infos[name]
-	if !exists {
-		return c.JSON(http.StatusNotFound, map[string]string{
-			"error": "Service info with that name was not found",
-		})
-	}
-
-	return c.JSON(http.StatusOK, value)
-}
+//func getByName(c echo.Context) error {
+//	name := c.Param("name")
+//	cc := c.(*CustomContext)
+//
+//	infos, err := cc.Sr.GetInfos()
+//	if err != nil {
+//		return err
+//	}
+//
+//	value, exists := infos[name]
+//	if !exists {
+//		return c.JSON(http.StatusNotFound, map[string]string{
+//			"error": "Service info with that name was not found",
+//		})
+//	}
+//
+//	return c.JSON(http.StatusOK, value)
+//}
 
 func proxyPass(c echo.Context) error {
 	cc := c.(*CustomContext)
@@ -69,30 +69,26 @@ func proxyPass(c echo.Context) error {
 		endpoint = splitPath[1]
 	}
 
-	if name == service.Name {
-		url := fmt.Sprintf("http://%s%s/%s", service.Ip, service.Port, endpoint)
-		err := forwardRequest(c, url)
-		if err != nil {
-			return err
-		}
+	infos, err := cc.Sr.GetInfos()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	var url string
+	val, found := infos[name]
+	if found {
+		url = fmt.Sprintf("http://%s%s/%s", val.Ip, val.Port, endpoint)
 	} else {
-		infos, err := cc.Sr.GetInfos()
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": err.Error(),
-			})
-		}
-		val, found := infos[name]
-		if !found {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": "Bad path",
-			})
-		}
-		url := fmt.Sprintf("http://%s%s/%s", val.Ip, val.Port, endpoint)
-		err = forwardRequest(c, url)
-		if err != nil {
-			return err
-		}
+		url = fmt.Sprintf("http://%s%s/%s", service.Ip, service.Port, endpoint)
+	}
+
+	err = forwardRequest(c, url)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 	}
 
 	return c.JSON(http.StatusNoContent, nil)
