@@ -105,9 +105,9 @@ func forwardRequest(c echo.Context, url string) error {
 	req := c.Request()
 
 	forwardedReq, err := http.NewRequest(req.Method, url, req.Body)
-	forwardedReq.WithContext(ctx)
+	forwardedReq = forwardedReq.WithContext(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to create forwarded request")
+		return fmt.Errorf("failed to create forwarded request")
 	}
 
 	for key, values := range req.Header {
@@ -120,7 +120,7 @@ func forwardRequest(c echo.Context, url string) error {
 	fmt.Printf("[*] Forwarding to: %s\n", url)
 	resp, err := client.Do(forwardedReq)
 	if err != nil {
-		return fmt.Errorf("Failed to forward request")
+		return fmt.Errorf("failed to forward request")
 	}
 	defer resp.Body.Close()
 
@@ -133,7 +133,7 @@ func forwardRequest(c echo.Context, url string) error {
 
 	_, err = io.Copy(c.Response().Writer, resp.Body)
 	if err != nil {
-		return fmt.Errorf("Failed to copy response")
+		return fmt.Errorf("failed to copy response")
 	}
 
 	return nil
