@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -167,6 +169,7 @@ func (proxy *Proxy) Run() {
 	})
 
 	// Routes
+	e.GET("/log", getLogData)
 	e.GET("/health", healthCheck)
 	e.GET("/serviceInfo", getAll)
 	e.GET("/serviceInfo/:name", getByName)
@@ -233,7 +236,7 @@ func logRequest(next echo.HandlerFunc) echo.HandlerFunc {
 
 		duration := time.Since(start).Milliseconds()
 
-		if c.Request().URL.String() == "/health" {
+		if c.Request().URL.String() == "/health" || c.Request().URL.String() == "/log" {
 			return nil
 		}
 
@@ -292,4 +295,95 @@ func writeToLog(logEntry string) error {
 		return fmt.Errorf("error writing to log file: %w", err)
 	}
 	return nil
+}
+
+func parseHeaders(headers string) map[string]string {
+	headerMap := make(map[string]string)
+	pairs := strings.Split(headers, ",")
+	for _, pair := range pairs {
+		kv := strings.SplitN(pair, ":", 2)
+		if len(kv) == 2 {
+			headerMap[kv[0]] = kv[1]
+		}
+	}
+	return headerMap
+}
+
+func parseLogEntry(line string) (LogEntry, error) {
+	fields := strings.Split(line, "|")
+	logEntry := LogEntry{}
+
+	for _, field := range fields {
+		kv := strings.SplitN(field, "=", 2)
+		if len(kv) != 2 {
+			return logEntry, fmt.Errorf("invalid field: %s", field)
+		}
+		key, value := kv[0], kv[1]
+
+		switch key {
+		case "request_timestamp":
+			logEntry.RequestTimestamp = value
+		case "client_ip":
+			logEntry.ClientIP = value
+		case "method":
+			logEntry.Method = value
+		case "url":
+			logEntry.URL = value
+		case "protocol":
+			logEntry.Protocol = value
+		case "request_headers":
+			logEntry.RequestHeaders = parseHeaders(value)
+		case "request_body":
+			logEntry.RequestBody = value
+		case "response_timestamp":
+			logEntry.ResponseTimestamp = value
+		case "status_code":
+			statusCode, err := strconv.Atoi(value)
+			if err != nil {
+				return logEntry, fmt.Errorf("invalid status code: %v", err)
+			}
+			logEntry.StatusCode = statusCode
+		case "response_headers":
+			logEntry.ResponseHeaders = parseHeaders(value)
+		case "response_body":
+			logEntry.ResponseBody = value
+		case "duration_ms":
+			durationMs, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return logEntry, fmt.Errorf("invalid duration: %v", err)
+			}
+			logEntry.DurationMs = durationMs
+		default:
+			return logEntry, fmt.Errorf("unknown key: %s", key)
+		}
+	}
+
+	return logEntry, nil
+}
+
+func readLogEntriesFromFile(filePath string) ([]LogEntry, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not open file: %v", err)
+	}
+	defer file.Close()
+
+	var logEntries []LogEntry
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		entry, err := parseLogEntry(line)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse log entry: %v", err)
+		}
+		logEntries = append(logEntries, entry)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading file: %v", err)
+	}
+
+	return logEntries, nil
 }

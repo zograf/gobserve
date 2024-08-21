@@ -160,3 +160,8 @@ func register(c echo.Context) error {
 func healthCheck(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"status": "healthy"})
 }
+
+func getLogData(c echo.Context) error {
+	logEntries, _ := readLogEntriesFromFile(LOG_FILE)
+	return c.JSON(http.StatusOK, logEntries)
+}
