@@ -19,4 +19,19 @@ type Registry interface {
 	GetProxiedService() *ServiceInfo
 }
 
+type LogEntry struct {
+	RequestTimestamp  string            `json:"request_timestamp"`
+	ClientIP          string            `json:"client_ip"`
+	Method            string            `json:"method"`
+	URL               string            `json:"url"`
+	Protocol          string            `json:"protocol"`
+	RequestHeaders    map[string]string `json:"request_headers"`
+	RequestBody       string            `json:"request_body"`
+	ResponseTimestamp string            `json:"response_timestamp"`
+	StatusCode        int               `json:"status_code"`
+	ResponseHeaders   map[string]string `json:"response_headers"`
+	ResponseBody      string            `json:"response_body"`
+	DurationMs        int64             `json:"duration_ms"`
+}
+
 const LOG_FILE string = "proxy.log"
