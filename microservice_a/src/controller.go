@@ -43,15 +43,23 @@ func getServiceInfo(c echo.Context) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
-		bodyBytes, err := io.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": fmt.Errorf("HTTP request failed: %w", err).Error(),
+				"error": fmt.Errorf("http request failed: %w", err).Error(),
 			})
 		}
 
-		bodyString := string(bodyBytes)
-		return c.JSON(http.StatusOK, bodyString)
+		var infos map[string]ServiceInfo
+		err = json.Unmarshal(body, &infos)
+
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": fmt.Errorf("failed to unmarshal json: %w", err).Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, infos)
 	}
 
 	return c.JSON(resp.StatusCode, "Microservice A failed")
