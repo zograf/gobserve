@@ -44,3 +44,5 @@ const IP string = "127.0.0.1"
 const CONFIG_PATH string = "./config.json"
 const PROXY_PATH string = "../proxy"
 const SERVICE_REGISTRY_PATH string = "../service_registry"
+const GATEWAY_PATH string = "../gateway"
+const GATEWAY_PORT int = 8080

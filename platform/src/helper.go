@@ -100,6 +100,8 @@ func clean() error {
 
 	fileName := fmt.Sprintf("%s%cservice_registry", wd, os.PathSeparator)
 	removeDir(fileName)
+	fileName = fmt.Sprintf("%s%cgw", wd, os.PathSeparator)
+	removeDir(fileName)
 	fileName = fmt.Sprintf("%s%cdocker-compose.yml", wd, os.PathSeparator)
 	removeFile(fileName)
 
@@ -171,27 +173,35 @@ func makeService(serviceName string, port int, dependsOn, dockerfilePath, srIp s
 	return s
 }
 
-func makeProxy(path string, counter, port int) (string, error) {
-	if err := isDir(path); err != nil {
-		return "", fmt.Errorf("failed to open the directory: %v", err)
-	}
-
+func makeServiceByName(serviceName string, counter, port int) (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("failed to get working directory")
 	}
 
-	newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, counter)
-	proxyFolder := fmt.Sprintf("p%d", counter)
-	cmd := exec.Command("cp", "--recursive", PROXY_PATH, newPath)
-	cmd.Run()
+	var folder string
 
-	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, proxyFolder, os.PathSeparator)
+	switch serviceName {
+	case "gateway":
+		newPath := fmt.Sprintf("%s%cgw", wd, os.PathSeparator)
+		folder = "gw"
+		cmd := exec.Command("cp", "--recursive", GATEWAY_PATH, newPath)
+		cmd.Run()
+	case "proxy":
+		newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, counter)
+		folder = fmt.Sprintf("p%d", counter)
+		cmd := exec.Command("cp", "--recursive", PROXY_PATH, newPath)
+		cmd.Run()
+	default:
+		return "", fmt.Errorf("unknown service name")
+	}
 
-	sp := makeService(proxyFolder, port, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
+	dockerfilePath := fmt.Sprintf(".%c%s%cDockerfile", os.PathSeparator, folder, os.PathSeparator)
 
-	err = saveService(proxyFolder, sp)
-	return proxyFolder, err
+	sp := makeService(folder, port, "service_registry", dockerfilePath, "service_registry", SERVICE_REGISTRY_PORT)
+
+	err = saveService(folder, sp)
+	return folder, err
 }
 
 func makeMicroservice(path, proxyName string, counter, port, proxyIp int) error {

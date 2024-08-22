@@ -1,4 +1,4 @@
-package proxy
+package gateway
 
 import (
 	"context"
@@ -11,47 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func getAll(c echo.Context) error {
+func forwardRequest(c echo.Context) error {
 	cc := c.(*CustomContext)
-
-	infos, err := cc.Sr.GetInfos()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(http.StatusOK, infos)
-}
-
-//func getByName(c echo.Context) error {
-//	name := c.Param("name")
-//	cc := c.(*CustomContext)
-//
-//	infos, err := cc.Sr.GetInfos()
-//	if err != nil {
-//		return err
-//	}
-//
-//	value, exists := infos[name]
-//	if !exists {
-//		return c.JSON(http.StatusNotFound, map[string]string{
-//			"error": "Service info with that name was not found",
-//		})
-//	}
-//
-//	return c.JSON(http.StatusOK, value)
-//}
-
-func proxyPass(c echo.Context) error {
-	cc := c.(*CustomContext)
-
-	service := cc.Sr.GetProxiedService()
-	if service == nil {
-		return c.JSON(http.StatusNotFound, map[string]string{
-			"error": "Service not running",
-		})
-	}
 
 	path := c.Request().URL.Path
 	splitPath := strings.SplitN(path[1:], "/", 2)
@@ -80,21 +41,22 @@ func proxyPass(c echo.Context) error {
 	val, found := infos[name]
 	if found {
 		url = fmt.Sprintf("http://%s%s/%s", val.Ip, val.Port, endpoint)
+		err = forward(c, url)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+		}
 	} else {
-		url = fmt.Sprintf("http://%s%s/%s", service.Ip, service.Port, path[1:])
-	}
-
-	err = forwardRequest(c, url)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
+		return c.JSON(http.StatusNotFound, map[string]string{
+			"error": "Service not found",
 		})
 	}
 
 	return c.NoContent(204)
 }
 
-func forwardRequest(c echo.Context, url string) error {
+func forward(c echo.Context, url string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 
@@ -135,29 +97,6 @@ func forwardRequest(c echo.Context, url string) error {
 	return nil
 }
 
-func register(c echo.Context) error {
-	si := &ServiceInfo{}
-
-	if err := c.Bind(si); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "Invalid request body",
-		})
-	}
-	cc := c.(*CustomContext)
-	if err := cc.Sr.AddServiceInfo(si); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(http.StatusOK, si)
-}
-
 func healthCheck(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"status": "healthy"})
-}
-
-func getLogData(c echo.Context) error {
-	logEntries, _ := readLogEntriesFromFile(LOG_FILE)
-	return c.JSON(http.StatusOK, logEntries)
 }
