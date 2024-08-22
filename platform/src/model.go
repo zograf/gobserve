@@ -46,3 +46,5 @@ const PROXY_PATH string = "../proxy"
 const SERVICE_REGISTRY_PATH string = "../service_registry"
 const GATEWAY_PATH string = "../gateway"
 const GATEWAY_PORT int = 8080
+const AGGREGATOR_PATH string = "../aggregator"
+const AGGREGATOR_PORT int = 1234

@@ -102,6 +102,8 @@ func clean() error {
 	removeDir(fileName)
 	fileName = fmt.Sprintf("%s%cgw", wd, os.PathSeparator)
 	removeDir(fileName)
+	fileName = fmt.Sprintf("%s%cagg", wd, os.PathSeparator)
+	removeDir(fileName)
 	fileName = fmt.Sprintf("%s%cdocker-compose.yml", wd, os.PathSeparator)
 	removeFile(fileName)
 
@@ -191,6 +193,11 @@ func makeServiceByName(serviceName string, counter, port int) (string, error) {
 		newPath := fmt.Sprintf("%s%cp%d", wd, os.PathSeparator, counter)
 		folder = fmt.Sprintf("p%d", counter)
 		cmd := exec.Command("cp", "--recursive", PROXY_PATH, newPath)
+		cmd.Run()
+	case "aggregator":
+		newPath := fmt.Sprintf("%s%cagg", wd, os.PathSeparator)
+		folder = "agg"
+		cmd := exec.Command("cp", "--recursive", AGGREGATOR_PATH, newPath)
 		cmd.Run()
 	default:
 		return "", fmt.Errorf("unknown service name")

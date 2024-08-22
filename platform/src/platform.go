@@ -36,6 +36,11 @@ func Init() error {
 		return err
 	}
 
+	_, err = makeServiceByName("aggregator", 0, AGGREGATOR_PORT)
+	if err != nil {
+		return err
+	}
+
 	err = writeConfig(&PlatformConfig{
 		ServiceCounter:  1,
 		NextProxyPort:   10001,
