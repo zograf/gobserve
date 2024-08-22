@@ -31,6 +31,11 @@ func Init() error {
 		return err
 	}
 
+	_, err = makeServiceByName("gateway", 0, GATEWAY_PORT)
+	if err != nil {
+		return err
+	}
+
 	err = writeConfig(&PlatformConfig{
 		ServiceCounter:  1,
 		NextProxyPort:   10001,
@@ -81,7 +86,7 @@ func Add(path string) error {
 		return fmt.Errorf("failed to read the config file: %v", err)
 	}
 
-	proxyName, err := makeProxy(PROXY_PATH, config.ServiceCounter, config.NextProxyPort)
+	proxyName, err := makeServiceByName("proxy", config.ServiceCounter, config.NextProxyPort)
 	if err != nil {
 		return err
 	}
