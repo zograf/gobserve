@@ -20,11 +20,15 @@ func New() *Aggregator {
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
 	name := os.Getenv("NAME")
 	gateway := &Aggregator{
-		Ip:     ip,
-		Port:   p,
-		SRIP:   srIp,
-		SRPort: srPort,
-		Name:   name,
+		Component: &Component{
+			Info: &ServiceInfo{
+				Ip:   ip,
+				Port: p,
+				Name: name,
+			},
+			SRIP:   srIp,
+			SRPort: srPort,
+		},
 	}
 	return gateway
 }
@@ -52,7 +56,7 @@ func (agg *Aggregator) Run() {
 		return
 	}
 
-	url := fmt.Sprintf("%s%s", agg.Ip, agg.Port)
+	url := fmt.Sprintf("%s%s", agg.Component.Info.Ip, agg.Component.Info.Port)
 	e.Logger.Fatal(e.Start(url))
 }
 
@@ -60,7 +64,7 @@ func (gateway *Aggregator) GetInfos() (map[string]*ServiceInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 
-	url := fmt.Sprintf("http://%s%s%s", gateway.SRIP, gateway.SRPort, "/serviceInfo")
+	url := fmt.Sprintf("http://%s%s%s", gateway.Component.SRIP, gateway.Component.SRPort, "/serviceInfo")
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	req = req.WithContext(ctx)
 
@@ -97,18 +101,14 @@ func register(agg Aggregator) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	info := ServiceInfo{
-		Name: agg.Name,
-		Ip:   agg.Ip,
-		Port: agg.Port,
-	}
+	info := agg.Component.Info
 
-	jsonPayload, err := json.Marshal(info)
+	jsonPayload, err := json.Marshal(*info)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON payload: %w", err)
 	}
 
-	url := fmt.Sprintf("http://%s%s/serviceInfo", agg.SRIP, agg.SRPort)
+	url := fmt.Sprintf("http://%s%s/serviceInfo", agg.Component.SRIP, agg.Component.SRPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)

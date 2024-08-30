@@ -8,11 +8,13 @@ type CustomContext struct {
 }
 
 type Microservice struct {
-	Port                string
-	Ip                  string
-	ServiceRegistryIp   string
-	ServiceRegistryPort string
-	Info                ServiceInfo
+	Component *Component
+}
+
+type Component struct {
+	Info   *ServiceInfo
+	SRIP   string
+	SRPort string
 }
 
 type ServiceInfo struct {

@@ -17,11 +17,18 @@ func New() *Gateway {
 	ip := os.Getenv("IP")
 	srIp := os.Getenv("SERVICE_REGISTRY_IP")
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
+	name := os.Getenv("NAME")
+
 	gateway := &Gateway{
-		Ip:     ip,
-		Port:   p,
-		SRIP:   srIp,
-		SRPort: srPort,
+		Component: &Component{
+			Info: &ServiceInfo{
+				Ip:   ip,
+				Port: p,
+				Name: name,
+			},
+			SRIP:   srIp,
+			SRPort: srPort,
+		},
 	}
 	return gateway
 }
@@ -44,7 +51,7 @@ func (gateway *Gateway) Run() {
 	e.GET("/health", healthCheck)
 	e.Any("/*", forwardRequest)
 
-	url := fmt.Sprintf("%s%s", gateway.Ip, gateway.Port)
+	url := fmt.Sprintf("%s%s", gateway.Component.Info.Ip, gateway.Component.Info.Port)
 	e.Logger.Fatal(e.Start(url))
 }
 
@@ -52,7 +59,7 @@ func (gateway *Gateway) GetInfos() (map[string]*ServiceInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 
-	url := fmt.Sprintf("http://%s%s%s", gateway.SRIP, gateway.SRPort, "/serviceInfo")
+	url := fmt.Sprintf("http://%s%s%s", gateway.Component.SRIP, gateway.Component.SRPort, "/serviceInfo")
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	req = req.WithContext(ctx)
 

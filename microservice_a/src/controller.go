@@ -24,7 +24,7 @@ func getServiceInfo(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	url := fmt.Sprintf("http://%s%s/serviceInfo", ms.ServiceRegistryIp, ms.ServiceRegistryPort)
+	url := fmt.Sprintf("http://%s%s/serviceInfo", ms.Component.SRIP, ms.Component.SRPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -69,13 +69,13 @@ func register(ms Microservice) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	info := ms.Info
-	jsonPayload, err := json.Marshal(info)
+	info := ms.Component.Info
+	jsonPayload, err := json.Marshal(*info)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON payload: %w", err)
 	}
 
-	url := fmt.Sprintf("http://%s%s/serviceInfo", ms.ServiceRegistryIp, ms.ServiceRegistryPort)
+	url := fmt.Sprintf("http://%s%s/serviceInfo", ms.Component.SRIP, ms.Component.SRPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)

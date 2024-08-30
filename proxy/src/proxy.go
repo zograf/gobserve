@@ -17,19 +17,16 @@ import (
 )
 
 type Proxy struct {
-	Port           string
-	Ip             string
+	Component      *Component
 	Infos          map[string]*ServiceInfo
 	ProxiedService *ServiceInfo
-	SRIP           string
-	SRPort         string
 }
 
 func (proxy *Proxy) getRealInfos() (map[string]*ServiceInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*10))
 	defer cancel()
 
-	url := fmt.Sprintf("http://%s%s%s", proxy.SRIP, proxy.SRPort, "/serviceInfo")
+	url := fmt.Sprintf("http://%s%s%s", proxy.Component.SRIP, proxy.Component.SRPort, "/serviceInfo")
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	req = req.WithContext(ctx)
 
@@ -77,8 +74,8 @@ func (proxy *Proxy) GetInfos() (map[string]*ServiceInfo, error) {
 	}
 
 	for _, val := range realInfos {
-		val.Ip = proxy.Ip
-		val.Port = proxy.Port
+		val.Ip = proxy.Component.Info.Ip
+		val.Port = proxy.Component.Info.Port
 	}
 
 	proxy.Infos = realInfos
@@ -94,7 +91,7 @@ func (proxy *Proxy) addToRegistry(si *ServiceInfo) error {
 		return err
 	}
 
-	url := fmt.Sprintf("http://%s%s%s", proxy.SRIP, proxy.SRPort, "/serviceInfo")
+	url := fmt.Sprintf("http://%s%s%s", proxy.Component.SRIP, proxy.Component.SRPort, "/serviceInfo")
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer([]byte(jsonData)))
 
 	if err != nil {
@@ -124,8 +121,8 @@ func (proxy *Proxy) AddServiceInfo(si *ServiceInfo) error {
 
 	proxiedInfo := &ServiceInfo{
 		Name: si.Name,
-		Port: proxy.Port,
-		Ip:   proxy.Ip,
+		Port: proxy.Component.Info.Port,
+		Ip:   proxy.Component.Info.Ip,
 	}
 
 	err := proxy.addToRegistry(proxiedInfo)
@@ -142,11 +139,18 @@ func New() *Proxy {
 	ip := os.Getenv("IP")
 	srIp := os.Getenv("SERVICE_REGISTRY_IP")
 	srPort := os.Getenv("SERVICE_REGISTRY_PORT")
+	name := os.Getenv("NAME")
+
 	sr := &Proxy{
-		Ip:     ip,
-		Port:   p,
-		SRIP:   srIp,
-		SRPort: srPort,
+		Component: &Component{
+			Info: &ServiceInfo{
+				Ip:   ip,
+				Port: p,
+				Name: name,
+			},
+			SRIP:   srIp,
+			SRPort: srPort,
+		},
 	}
 	sr.Infos = make(map[string]*ServiceInfo)
 	return sr
@@ -176,7 +180,7 @@ func (proxy *Proxy) Run() {
 	e.POST("/serviceInfo", register)
 	e.Any("/*", proxyPass)
 
-	url := fmt.Sprintf("%s%s", proxy.Ip, proxy.Port)
+	url := fmt.Sprintf("%s%s", proxy.Component.Info.Ip, proxy.Component.Info.Port)
 	e.Logger.Fatal(e.Start(url))
 }
 
