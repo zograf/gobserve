@@ -15,14 +15,14 @@ func New() *Microservice {
 	name := os.Getenv("NAME")
 
 	ms := &Microservice{
-		Ip:                  ip,
-		Port:                p,
-		ServiceRegistryIp:   srIp,
-		ServiceRegistryPort: srPort,
-		Info: ServiceInfo{
-			Ip:   ip,
-			Port: p,
-			Name: name,
+		Component: &Component{
+			Info: &ServiceInfo{
+				Ip:   ip,
+				Port: p,
+				Name: name,
+			},
+			SRIP:   srIp,
+			SRPort: srPort,
 		},
 	}
 	return ms
@@ -53,6 +53,6 @@ func (ms *Microservice) Run() {
 		fmt.Println("[*] Failed to register service: %w", err)
 	}
 
-	url := fmt.Sprintf("%s%s", ms.Ip, ms.Port)
+	url := fmt.Sprintf("%s%s", ms.Component.Info.Ip, ms.Component.Info.Port)
 	e.Logger.Fatal(e.Start(url))
 }

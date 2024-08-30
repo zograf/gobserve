@@ -3,11 +3,13 @@ package aggregator
 import "github.com/labstack/echo/v4"
 
 type Aggregator struct {
-	Port   string
-	Ip     string
+	Component *Component
+}
+
+type Component struct {
+	Info   *ServiceInfo
 	SRIP   string
 	SRPort string
-	Name   string
 }
 
 type ServiceInfo struct {

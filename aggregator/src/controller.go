@@ -31,7 +31,7 @@ func getLogs(c echo.Context) error {
 	}
 
 	for _, info := range infos {
-		if info.Name == cc.Sr.Name {
+		if info.Name == cc.Sr.Component.Info.Name {
 			continue
 		}
 		url := fmt.Sprintf("http://%s%s/log", info.Ip, info.Port)

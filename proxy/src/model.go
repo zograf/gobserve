@@ -8,6 +8,12 @@ type ServiceInfo struct {
 	Port string `json:"port"`
 }
 
+type Component struct {
+	Info   *ServiceInfo
+	SRIP   string
+	SRPort string
+}
+
 type CustomContext struct {
 	echo.Context
 	Sr Registry
