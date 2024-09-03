@@ -1,0 +1,19 @@
+.smallcard-title {
+    padding-left: 5px
+}
+.smallcard-number{
+    display: inline;
+    font-weight: bold;
+    font-size: 5em;
+    padding: 15px 5px 20px 20px;
+    text-align: center;
+    justify-content: center;
+}
+.smallcard-measurement{
+    display: inline;
+    font-weight: bold;
+    font-size: 2em;
+    padding: 15px 20px 20px 0px;
+    text-align: center;
+    justify-content: center;
+}

@@ -9,7 +9,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+      animation: App-logo-spin infinite 20s linear;
   }
 }
 
@@ -30,9 +30,25 @@
 
 @keyframes App-logo-spin {
   from {
-    transform: rotate(0deg);
+      transform: rotate(0deg);
   }
   to {
-    transform: rotate(360deg);
+      transform: rotate(360deg);
   }
+}
+
+.header-root {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.sidebar-root {
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+.page-wrapper {
+  height: 100vh;
+  overflow-y: scroll;
+  padding: 0 16px;
 }
