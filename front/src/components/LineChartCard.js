@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Chart from "react-apexcharts";
 
-export default function LineChartCard({title, x, y, width, height}) {
+export default function LineChartCard({title, x, y, width, height, reff}) {
     const [data, setData] = useState({
       options: {
         chart: {
@@ -21,7 +21,7 @@ export default function LineChartCard({title, x, y, width, height}) {
     })
 
     return (
-        <div className="card" style={{width: width, height: height}}>
+        <div className="card" style={{width: width, height: height}} ref={reff}>
             <p className="chart-title">{title}</p>
             <Chart
                 options={data.options}

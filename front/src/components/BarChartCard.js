@@ -1,16 +1,23 @@
 import React, { useState } from "react";
 import Chart from "react-apexcharts";
 
-export default function PieChartCard({title, x, y, width, colors, height}) {
+export default function BarChartCard({title, x, y, width, height}) {
     const [data, setData] = useState({
       options: {
         chart: {
           id: "basic-line",
+          toolbar: {
+            show: false
+          }
         },
-        labels: y,
-        colors: colors
+        xaxis: {
+          categories: x
+        },
+        colors: ["#000000", "#c88214"]
       },
-        series: x
+      series: [{
+          data: y
+        }]
     })
 
     return (
@@ -19,8 +26,8 @@ export default function PieChartCard({title, x, y, width, colors, height}) {
             <Chart
                 options={data.options}
                 series={data.series}
-                type="pie"
-                height={"95%"}
+                type="bar"
+                height={"100%"}
                 width={"100%"}
             />
         </div>
