@@ -1,17 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Chart from "react-apexcharts";
 
 export default function PieChartCard({title, x, y, width, colors, height}) {
     const [data, setData] = useState({
-      options: {
-        chart: {
-          id: "basic-line",
+        options: {
+          chart: {
+            id: "basic-pie",
+          },
+          labels: y,
+          colors: colors
         },
-        labels: y,
-        colors: colors
-      },
-        series: x
+          series: x
     })
+
+    useEffect(() => {
+      setData(prevData => ({
+        options: {
+          chart: prevData.options.chart,
+          labels: y,
+          colors: prevData.options.colors
+        },
+        series: x
+    }));
+    }, [x, y])
 
     return (
         <div className="card" style={{width: width, height: height}}>

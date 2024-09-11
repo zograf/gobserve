@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 
 export default function BarChartCard({title, x, y, width, height}) {
@@ -19,6 +19,21 @@ export default function BarChartCard({title, x, y, width, height}) {
           data: y
         }]
     })
+
+    useEffect(() => {
+      setData(prevData => ({
+        options: {
+          chart: prevData.options.chart,
+          xaxis: {
+            categories: x
+          },
+          colors: prevData.options.colors
+        },
+        series: [{
+          data: y
+        }]
+    }));
+    }, [x, y])
 
     return (
         <div className="card" style={{width: width, height: height}}>
