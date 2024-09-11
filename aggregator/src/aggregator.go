@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func New() *Aggregator {
@@ -37,6 +38,11 @@ func (agg *Aggregator) Run() {
 	e := echo.New()
 
 	// Middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+	}))
+
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			cc := &CustomContext{
